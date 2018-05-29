@@ -36,8 +36,7 @@ run = forever $ do
 syncJobs :: IO ()
 syncJobs = do
   try (Dir.createDirectory "scripts") :: IO (Either (IOException) ())
-  -- jobs <- DB.get "/jobs" :: IO [Job]
-  let jobs = []
+  jobs <- DB.get "/jobs" :: IO [Job]
   mapM_ syncJob jobs
   return ()
 --------------------------------------------------------------------------------
