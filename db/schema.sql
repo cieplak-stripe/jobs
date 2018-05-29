@@ -1,9 +1,9 @@
 -- -----------------------------------------------------------------------------
 -- Postgres schema for jobs service
 -- -----------------------------------------------------------------------------
-CREATE DATABASE jobs_test;
+CREATE DATABASE jobs;
 -- -----------------------------------------------------------------------------
-\connect jobs_test
+\connect jobs
 -- -----------------------------------------------------------------------------
 CREATE TYPE task_state
   AS ENUM
@@ -69,7 +69,7 @@ WITH
    ),
   count_tasks_created AS (
     INSERT INTO tasks (job_id, scheduled_for)
-    SELECT job_id, scheduled_for FROM reified_tasks
+    SELECT job_id, scheduled_for FROM scheduled_tasks
     ON CONFLICT DO NOTHING
     RETURNING 1
   )
@@ -77,7 +77,7 @@ SELECT count(*) from count_tasks_created
 
 $$ LANGUAGE 'sql';
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION update_ready_tasks () RETURNS BIGINT AS $$
+CREATE OR REPLACE FUNCTION update_ready_tasks () RETURNS void AS $$
 
 UPDATE tasks
 SET    state = 'ready'
@@ -86,7 +86,7 @@ WHERE  state = 'staged' AND
 
 $$ LANGUAGE 'sql';
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION checkout_task (task_id_ int) RETUNS RECORD AS $$
+CREATE OR REPLACE FUNCTION checkout_task (task_id_ int) RETURNS RECORD AS $$
 
 BEGIN
 
@@ -99,10 +99,9 @@ BEGIN
     RAISE EXCEPTION 'Task is not ready';
   END IF;
 
-  RETURN (
-    INSERT INTO executions (task_id)
-    values (task_id_, 'localhost')
-  );
+  INSERT INTO executions (task_id)
+  VALUES (task_id_, 'localhost')
+  RETURNING *;
 
 END;
 
@@ -113,19 +112,19 @@ CREATE OR REPLACE FUNCTION finish_task_execution (
   state_       execution_state,
   stdout_      text,
   stderr_      text
-) AS $$
+) RETURNS void AS $$
 
 DECLARE task_id_ int;
 BEGIN
-  task_id_ := (
-    UPDATE executions
-    SET    finished_at = now(),
-           state       = state_,
-           stdout      = stdout_,
-           stdout      = stderr_
-    WHERE id = execution_id
-    RETURNING task_id
-  );
+
+  UPDATE executions
+  SET    finished_at = now(),
+         state       = state_,
+         stdout      = stdout_,
+         stderr      = stderr_
+  WHERE id = execution_id
+  RETURNING task_id INTO task_id_;
+
   IF state_ = 'succeeded' THEN
     UPDATE tasks SET state = 'completed' where id = task_id_;
   ELSE
