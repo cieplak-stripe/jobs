@@ -21,6 +21,7 @@ dependencies:
 - http-client
 - http-conduit
 - lens
+- unix
 - process
 - directory
 

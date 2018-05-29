@@ -4,11 +4,15 @@
 module Scheduler where
 --------------------------------------------------------------------------------
 import           Control.Concurrent (threadDelay)
+import           Control.Lens hiding ((.=))
 import           Control.Monad
 import           Control.Exception
+import           Data.Aeson
+import           Data.Text (unpack)
 import           Prelude ()
 import           Protolude
 import qualified System.Directory as Dir
+import           System.Posix.Files (accessModes, setFileMode)
 import           System.Process (readProcessWithExitCode)
 --------------------------------------------------------------------------------
 import qualified Database as DB
@@ -29,7 +33,9 @@ catchAny = Control.Exception.catch
 --------------------------------------------------------------------------------
 run :: IO ()
 run = forever $ do
-  result <- catchAny schedulerRoutine $ \e -> return ()
+  result <- catchAny schedulerRoutine $ \e -> do
+    putStrLn (show e :: Text)
+    return ()
   let microsecondsInSecond = 1000000
   threadDelay (1 * microsecondsInSecond)
 --------------------------------------------------------------------------------
@@ -42,14 +48,14 @@ syncJobs = do
 --------------------------------------------------------------------------------
 syncJob :: Job -> IO ()
 syncJob job = do
-  -- let filepath = scriptPath (show (job ^. _id))
-  -- let content  = job ^. _code
-  -- writeFile filepath content
-  -- chmod "a+x" filepath
+  let filepath = scriptPath (show (job ^. _id))
+  let content  = job ^. _code
+  writeFile filepath content
+  setFileMode filepath accessModes -- "chmod a+rwx"
   return ()
 --------------------------------------------------------------------------------
-scriptPath :: Text -> Text
-scriptPath number = "jobs" <> "/" <> "job" <> "." <> number
+scriptPath :: Text -> FilePath
+scriptPath number = unpack ("scripts" <> "/" <> "job" <> "." <> number)
 --------------------------------------------------------------------------------
 updateReadyTasks :: IO ()
 updateReadyTasks = do
