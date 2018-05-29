@@ -1,0 +1,56 @@
+name:                jobs
+version:             0.1.0.0
+github:              "finix-payments/jobs"
+license:             MIT
+author:              "Finix"
+maintainer:          "patrick@finixpayments.com"
+copyright:           "Finix 2018"
+
+extra-source-files:
+- README.md
+
+description:  <https://github.com/finix-payments/jobs#README.md>
+
+dependencies:
+- base >= 4.7 && < 5
+- aeson
+- aeson-pretty
+- text
+- protolude
+- bytestring
+- http-client
+- http-conduit
+- lens
+- process
+
+library:
+  source-dirs: src
+
+executables:
+
+  jobs:
+    main:                Main
+    source-dirs:         .
+    ghc-options:
+    - -fwarn-unused-imports
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - jobs
+
+tests:
+  jobs-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - jobs
+    - hspec
+    - QuickCheck
+    - doctest
+    - neat-interpoloation
+
