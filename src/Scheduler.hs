@@ -4,9 +4,11 @@
 module Scheduler where
 --------------------------------------------------------------------------------
 import           Control.Concurrent (threadDelay)
+import           Control.Monad
 import           Control.Exception
 import           Prelude ()
 import           Protolude
+import qualified System.Directory as Dir
 import           System.Process (readProcessWithExitCode)
 --------------------------------------------------------------------------------
 import qualified Database as DB
@@ -16,8 +18,8 @@ default (Text)
 --------------------------------------------------------------------------------
 schedulerRoutine :: IO ()
 schedulerRoutine = do
+  syncJobs
   return ()
-  -- syncJobs
   -- updateReadyTasks
   -- tasks <- getReadyTasks
   -- execute tasks
@@ -26,19 +28,17 @@ catchAny :: IO a -> (SomeException -> IO a) -> IO a
 catchAny = Control.Exception.catch
 --------------------------------------------------------------------------------
 run :: IO ()
-run = do
+run = forever $ do
   result <- catchAny schedulerRoutine $ \e -> return ()
   let microsecondsInSecond = 1000000
   threadDelay (1 * microsecondsInSecond)
-  run
 --------------------------------------------------------------------------------
 syncJobs :: IO ()
 syncJobs = do
-  -- case stat "jobs" of
-  --   False -> mkdir "jobs"
-  --   _     -> ()
+  try (Dir.createDirectory "scripts") :: IO (Either (IOException) ())
   -- jobs <- DB.get "/jobs" :: IO [Job]
-  -- map syncJob jobs
+  let jobs = []
+  mapM_ syncJob jobs
   return ()
 --------------------------------------------------------------------------------
 syncJob :: Job -> IO ()
