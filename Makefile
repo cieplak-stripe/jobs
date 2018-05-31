@@ -12,6 +12,7 @@ install_postgrest:
 
 initialize_database:
 	psql -Upostgres -f db/schema.sql
+	psql -Upostgres -f db/functions.sql
 
 test:
 	time stack test

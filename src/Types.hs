@@ -36,10 +36,10 @@ data Task
   } deriving (Show, Eq, Generic)
 
 data TaskState
-  = Staged
-  | Ready
-  | Running
-  | Complete
+  = STAGED
+  | READY
+  | RUNNING
+  | COMPLETE
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 --------------------------------------------------------------------------------
 -- |
@@ -55,9 +55,9 @@ data Execution
   } deriving (Show, Eq, Generic)
 
 data ExecutionState
-  = Started
-  | Succeeded
-  | Failed
+  = STARTED
+  | SUCCEEDED
+  | FAILED
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 --------------------------------------------------------------------------------
 -- |

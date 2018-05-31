@@ -7,11 +7,14 @@ module Database
   ) where
 --------------------------------------------------------------------------------
 import Data.Aeson
---import Data.ByteString.Char8 (decodeUtf8, encodeUtf8)
 import Network.HTTP.Client
 import Network.HTTP.Simple
-import Prelude ((!!))
 import Protolude hiding (get)
+--------------------------------------------------------------------------------
+-- postgREST config hard-coded for now
+
+host' = "localhost"
+port' = 7080
 --------------------------------------------------------------------------------
 post' :: ByteString
      -> Int
@@ -45,19 +48,19 @@ get' host port path = do
   response <- httpLBS request
   return response
 --------------------------------------------------------------------------------
-post :: FromJSON a => Text -> Value -> IO a
+post :: FromJSON a => Text -> Value -> IO a -- IO (Either Response) a
 post path json = do
-  response <- post' "localhost" 7080 (encodeUtf8 path) (encode json)
-  let maybeDecoded = decode (getResponseBody response) :: (FromJSON a) => Maybe [a]
+  response <- post' host' port' (encodeUtf8 path) (encode json)
+  let maybeDecoded = decode (getResponseBody response) :: (FromJSON a) => Maybe a
   case maybeDecoded of
-    Just decoded -> return (decoded !! 0) -- TODO
-    -- TODO
+    Just decoded -> return decoded -- (Right decoded)
+    -- Nothing      -> return (Left response)
 --------------------------------------------------------------------------------
-get ::  FromJSON a => Text -> IO [a]
+get ::  FromJSON a => Text -> IO a -- (Either Response) a
 get path = do
-  response <- get' "localhost" 7080 (encodeUtf8 path)
-  let maybeDecoded = decode (getResponseBody response) :: (FromJSON a) => Maybe [a]
+  response <- get' host' port' (encodeUtf8 path)
+  let maybeDecoded = decode (getResponseBody response) :: (FromJSON a) => Maybe a
   case maybeDecoded of
-    Just decoded -> return decoded
-    Nothing      -> return [] -- TODO
+    Just decoded -> return decoded --(Right decoded)
+--    Nothing      -> return (Left response)
 --------------------------------------------------------------------------------

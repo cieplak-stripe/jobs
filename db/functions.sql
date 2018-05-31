@@ -1,4 +1,6 @@
 -- -----------------------------------------------------------------------------
+\connect jobs
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION schedule_tasks () RETURNS BIGINT AS $$
 
 WITH
@@ -25,41 +27,56 @@ $$ LANGUAGE 'sql';
 CREATE OR REPLACE FUNCTION update_ready_tasks () RETURNS void AS $$
 
 UPDATE tasks
-SET    state = 'ready'
-WHERE  state = 'staged' AND
+SET    state = 'READY'
+WHERE  state = 'STAGED' AND
        now() > scheduled_for
 
 $$ LANGUAGE 'sql';
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION checkout_task (task_id_ int) RETURNS RECORD AS $$
+CREATE OR REPLACE FUNCTION checkout_task (task INT)
+RETURNS TABLE
+( id          INT
+, task_id     INT
+, owner       TEXT
+, started_at  TIMESTAMP
+, finished_at TIMESTAMP
+, state       execution_state
+, stdout      TEXT
+, stderr      TEXT
+)
+AS $$
 
 BEGIN
 
   UPDATE tasks
-  SET    state = 'running'
-  WHERE  id = task_id_
-    AND  state = 'ready';
+  SET    state       = 'RUNNING'
+  WHERE  tasks.id    = task
+    AND  tasks.state = 'READY';
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Task is not ready';
   END IF;
 
-  INSERT INTO executions (task_id)
-  VALUES (task_id_, 'localhost')
+  RETURN QUERY INSERT INTO executions (task_id, owner)
+  VALUES (task, 'localhost')
   RETURNING *;
+
 
 END;
 
 $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION finish_task_execution (
-  execution_id int,
-  state_       execution_state,
-  stdout_      text,
-  stderr_      text
-) RETURNS void AS $$
+  execution_id INT,
+  state        execution_state,
+  stdout       TEXT,
+  stderr       TEXT
+) RETURNS VOID AS $$
 
 DECLARE task_id_ int;
+        state_  execution_state = state;
+        stdout_ TEXT            = stdout;
+        stderr_ TEXT            = stderr;
 BEGIN
 
   UPDATE executions
@@ -70,12 +87,13 @@ BEGIN
   WHERE id = execution_id
   RETURNING task_id INTO task_id_;
 
-  IF state_ = 'succeeded' THEN
-    UPDATE tasks SET state = 'completed' where id = task_id_;
+  IF state = 'SUCCEEDED' THEN
+    UPDATE tasks SET state = 'COMPLETE' where id = task_id_;
   ELSE
-    UPDATE tasks SET state = 'ready'     where id = task_id_;
+    UPDATE tasks SET state = 'READY'     where id = task_id_;
   END IF;
 END;
 
 $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
+

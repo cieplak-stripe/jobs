@@ -10,7 +10,7 @@ import Control.Concurrent (forkIO)
 import Control.Exception (evaluate)
 import Control.Lens hiding ((.=))
 import Data.Aeson
-import Prelude
+import Prelude   hiding (head)
 import Protolude hiding (putStrLn)
 --------------------------------------------------------------------------------
 import Database
@@ -35,7 +35,8 @@ spec = do
                           , "start_time" .= "2018-05-29"
                           , "frequency"  .= "1 hour"
                           ]
-     job <- Database.post "/jobs" jobForm :: IO Job
+     jobs <- Database.post "/jobs" jobForm :: IO [Job]
+     let Just job = head jobs
      job ^. _title      `shouldBe` "List Files"
      job ^. _code       `shouldBe` "ls"
      job ^. _start_time `shouldBe` "2018-05-29T00:00:00"

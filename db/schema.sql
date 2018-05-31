@@ -7,17 +7,17 @@ CREATE DATABASE jobs;
 -- -----------------------------------------------------------------------------
 CREATE TYPE task_state
   AS ENUM
-  ( 'staged'
-  , 'ready'
-  , 'running'
-  , 'complete'
+  ( 'STAGED'
+  , 'READY'
+  , 'RUNNING'
+  , 'COMPLETE'
   );
 -- -----------------------------------------------------------------------------
 CREATE TYPE execution_state
   AS ENUM
-  ( 'started'
-  , 'succeeded'
-  , 'failed'
+  ( 'STARTED'
+  , 'SUCCEEDED'
+  , 'FAILED'
   );
 -- -----------------------------------------------------------------------------
 CREATE TABLE jobs
@@ -33,7 +33,7 @@ CREATE TABLE tasks
   , job_id        INT        REFERENCES jobs (id) NOT NULL
   , staged_at     TIMESTAMP  NOT NULL DEFAULT now()
   , scheduled_for TIMESTAMP  NOT NULL
-  , state         task_state NOT NULL DEFAULT 'staged'
+  , state         task_state NOT NULL DEFAULT 'STAGED'
   , unique (job_id, scheduled_for)
   );
 -- -----------------------------------------------------------------------------
@@ -43,7 +43,7 @@ CREATE TABLE executions
   , owner       TEXT            NOT NULL
   , started_at  TIMESTAMP       NOT NULL DEFAULT now()
   , finished_at TIMESTAMP
-  , state       execution_state NOT NULL DEFAULT 'started'
+  , state       execution_state NOT NULL DEFAULT 'STARTED'
   , stdout      TEXT
   , stderr      TEXT
   );

@@ -23,14 +23,12 @@ default (Text)
 schedulerRoutine :: IO ()
 schedulerRoutine = do
   syncJobs
+  scheduleTasks
+  updateReadyTasks
+  tasks <- getReadyTasks
+  mapM_ execute tasks
   return ()
-  -- updateReadyTasks
-  -- tasks <- getReadyTasks
-  -- execute tasks
---------------------------------------------------------------------------------
-catchAny :: IO a -> (SomeException -> IO a) -> IO a
-catchAny = Control.Exception.catch
---------------------------------------------------------------------------------
+
 run :: IO ()
 run = forever $ do
   result <- catchAny schedulerRoutine $ \e -> do
@@ -38,6 +36,9 @@ run = forever $ do
     return ()
   let microsecondsInSecond = 1000000
   threadDelay (1 * microsecondsInSecond)
+
+catchAny :: IO a -> (SomeException -> IO a) -> IO a
+catchAny = Control.Exception.catch
 --------------------------------------------------------------------------------
 syncJobs :: IO ()
 syncJobs = do
@@ -45,7 +46,7 @@ syncJobs = do
   jobs <- DB.get "/jobs" :: IO [Job]
   mapM_ syncJob jobs
   return ()
---------------------------------------------------------------------------------
+
 syncJob :: Job -> IO ()
 syncJob job = do
   let filepath = scriptPath (show (job ^. _id))
@@ -53,43 +54,51 @@ syncJob job = do
   writeFile filepath content
   setFileMode filepath accessModes -- "chmod a+rwx"
   return ()
---------------------------------------------------------------------------------
+
 scriptPath :: Text -> FilePath
 scriptPath number = unpack ("scripts" <> "/" <> "job" <> "." <> number)
 --------------------------------------------------------------------------------
+scheduleTasks :: IO ()
+scheduleTasks = do
+  DB.post "/rpc/schedule_tasks" (object []) :: IO Value
+  return ()
+--------------------------------------------------------------------------------
 updateReadyTasks :: IO ()
 updateReadyTasks = do
-  -- DB.post "/rpc/update_ready_tasks" (object [])
+  DB.post "/rpc/update_ready_tasks" (object []) :: IO Value
   return ()
 --------------------------------------------------------------------------------
 getReadyTasks :: IO [Task]
-getReadyTasks = undefined
-  -- tasks <- DB.get "/tasks?state=eq.ready" :: IO [Task]
-  -- return tasks
+getReadyTasks = do
+  tasks <- DB.get "/tasks?state=eq.READY" :: IO [Task]
+  return tasks
 --------------------------------------------------------------------------------
 execute :: Task -> IO ()
-execute task = undefined
-  -- let startForm = object ["task_id" .= (task ^. _id)]
-  -- maybeExecution <- DB.post "/rpc/checkout_task" startForm :: IO (Maybe Execution)
-  -- case maybeExecution of
-  --   Nothing -> do
-  --     -- log error
-  --     return ()
-  --   Just execution -> do
-  --     let scriptPath = scriptPath (show (task ^. _job_id))
-  --     let args       = []
-  --     let stdin      = ""
-  --     (exitCode, stdout, stderr) <- readProcessWithExitCode scriptPath args stdin
-  --     let executionStatus =
-  --           case exitCode of
-  --             0 -> Succeeded
-  --             _ -> Failed
-  --     let finishForm = object
-  --                      [ "execution_id" .= (execution ^. _id)
-  --                      , "state"        .= executionStatus
-  --                      , "stdout"       .= (stdout)
-  --                      , "stderr"       .= (stderr)
-  --                      ]
-  --     DB.post "/rpc/finish_task_execution" finishForm
-  --     return ()
+execute task = do
+  let startForm = object ["task" .= (task ^. _id)]
+  executions <- DB.post "/rpc/checkout_task" startForm :: IO [Execution]
+  let maybeExecution = head executions
+  case maybeExecution of
+    Nothing -> do
+      putStrLn (show executions :: Text)
+      return ()
+    Just execution -> do
+      let path  = scriptPath (show (task ^. _job_id))
+      let args  = []
+      let stdin = ""
+      putStrLn ("running " <> "path")
+      (exitCode, stdout, stderr) <- readProcessWithExitCode path args stdin
+      let executionStatus =
+            case exitCode of
+              _ -> SUCCEEDED
+              -- _ -> FAILED
+      let finishForm = object
+                       [ "execution_id" .= (execution ^. _id)
+                       , "state"        .= executionStatus
+                       , "stdout"       .= (stdout)
+                       , "stderr"       .= (stderr)
+                       ]
+      putStrLn (encode finishForm)
+      DB.post "/rpc/finish_task_execution" finishForm :: IO Value
+      return ()
 --------------------------------------------------------------------------------
