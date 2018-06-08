@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+        <title>Jobs</title>
+        <style>
+         table {
+             border-collapse: collapse;
+             border: 2px black solid;
+             font: 12px sans-serif;
+         }
+         td, th {
+             border: 1px black solid;
+             padding: 5px;
+         }
+         tr:hover {
+             background-color: aliceblue;
+         }
+        </style>
+    </head>
+    <body onload="loadJobs()">
+
+        <div class="container">
+            <div class="row">
+
+                <div class="col">
+                    <h3>Jobs</h3>
+                    <table id="jobsTable">
+                        <thead>
+                            <tr><th>ID</th><th>Description</th><th>Code</th><th>First Execution</th><th>Frequency</th></tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col">
+                    <h3>Tasks</h3>
+                    <table id="tasksTable">
+                        <thead>
+                            <tr><th>ID</th><th>Job ID</th><th>Staged At</th><th>Scheduled For</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col">
+                    <h3>Executions</h3>
+                    <table id="executionsTable">
+                        <thead>
+                            <tr><th>ID</th><th>Task ID</th><th>Owner</th><th>Started At</th><th>Finished At</th><th>Status</th><th>STDOUT</th><th>STDERR</th></tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+
+            </div>
+        </div>
+
+        <script>
+
+         function loadJobs() {
+             d3.json("http://localhost:7080/jobs").then( data => {
+
+                 d3
+                     .select("#jobsTable").select('tbody').selectAll('tr')
+                     .data(data)
+                     .enter()
+                     .append('tr')
+                     .on('click', d => {
+                         d3.select("#jobsTable").selectAll("tr").style("background-color", "white");
+                         d3.select(d3.event.target.parentElement).style("background-color", "azure");
+                         loadTasks(d.id);
+                     })
+                     .selectAll("td")
+                     .data(function(d) { return Object.values(d); })
+                     .enter()
+                     .append("td")
+                     .text(function(d) { return d; });
+                 d3.select("#tasksTable").selectAll("tr").style("background-color", "white");
+             });
+         }
+
+         function loadTasks(jobId) {
+             d3.json("http://localhost:7080/tasks?job_id=eq." + jobId).then( data => {
+                 var rows = d3 .select("#tasksTable").select('tbody').selectAll('tr');
+                 rows.remove();
+                 rows = d3.select("#tasksTable").select('tbody').selectAll('tr');
+                 rows
+                     .data(data)
+                     .enter()
+                     .append('tr')
+                     .style("background-color", "azure")
+                     .on('click', d => {
+                         d3.select("#tasksTable").selectAll("tr").style("background-color", "azure");
+                         d3.select(d3.event.target.parentElement).style("background-color", "honeydew");
+                         loadExecutions(d.id);
+                     })
+                     .selectAll("td")
+                     .data(function(d) { return Object.values(d); })
+                     .enter()
+                     .append("td")
+                     .text(function(d) { return d; });
+                 d3.select("#executionsTable").selectAll("tr").style("background-color", "white");
+             });
+         }
+
+         function loadExecutions(taskId) {
+             d3.json("http://localhost:7080/executions?task_id=eq." + taskId).then( data => {
+                 var rows = d3 .select("#executionsTable").select('tbody').selectAll('tr');
+                 rows.remove();
+                 rows = d3.select("#executionsTable").select('tbody').selectAll('tr');
+                 rows
+                     .data(data)
+                     .enter()
+                     .append('tr')
+                     .style("background-color", "honeydew")
+                     .selectAll("td")
+                     .data(function(d) { return Object.values(d); })
+                     .enter()
+                     .append("td")
+                     .text(function(d) { return d; });
+             });
+         }
+
+         function createJob() {
+             fetch("http://localhost:7080/jobs",
+                   { method: 'POST'
+                   , body: '{ "title":"healthcheck", "code": "curl https://example.com/", "frequency": "10 min"}'
+                   , headers: {"content-type": "application/json"}
+                   }
+             );
+         }
+
+        </script>
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+    </body>
+</html>

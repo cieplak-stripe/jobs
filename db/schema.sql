@@ -24,7 +24,7 @@ CREATE TABLE jobs
   ( id         SERIAL    PRIMARY KEY
   , title      TEXT      NOT NULL
   , code       TEXT      NOT NULL
-  , start_time TIMESTAMP NOT NULL
+  , start_time TIMESTAMP NOT NULL DEFAULT now()
   , frequency  INTERVAL  NOT NULL
   );
 -- -----------------------------------------------------------------------------
