@@ -16,39 +16,92 @@
              padding: 5px;
          }
          tr:hover {
-             background-color: aliceblue;
+             background-color: lightgrey;
          }
+
+         #row1 {
+             position: fixed;
+             height: 33%;
+             top: 0;
+         }
+
+         #row1col2 {
+             position: fixed;
+             height: 33%;
+             top: 0%;
+             right: 0;
+             overflow: scroll;
+         }
+
+         #row2 {
+             position: fixed;
+             height: 30%;
+             top: 33%;
+         }
+
+         #row2col2 {
+             position: fixed;
+             height: 30%;
+             top: 33%;
+             right: 0;
+             overflow: scroll;
+         }
+
+         #row3 {
+             position: fixed;
+             height: 33%;
+             top: 66%;
+         }
+
+         #row3col2 {
+             position: fixed;
+             height: 33%;
+             top: 66%;
+             right: 0;
+             overflow: scroll;
+         }
+
+
         </style>
     </head>
     <body onload="loadJobs()">
-
         <div class="container">
-            <div class="row">
 
-                <div class="col">
-                    <h3>Jobs</h3>
-                    <table id="jobsTable">
-                        <thead>
-                            <tr><th>ID</th><th>Description</th><th>Code</th><th>First Execution</th><th>Frequency</th></tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
+            <div class="row" id="row1">
+                <div class="col-3">
+                    <h3 class="title">Jobs</h3>
                 </div>
-
-                <div class="col">
-                    <h3>Tasks</h3>
-                    <table id="tasksTable">
-                        <thead>
-                            <tr><th>ID</th><th>Job ID</th><th>Staged At</th><th>Scheduled For</th><th>Status</th></tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
+                    <div class="col-9" id="row1col2">
+                <table id="jobsTable">
+                    <thead>
+                        <tr><th>ID</th><th>Description</th><th>Code</th><th>First Execution</th><th>Frequency</th></tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
                 </div>
+            </div>
 
-                <div class="col">
-                    <h3>Executions</h3>
+            <div class="row" id="row2">
+                <div class="col-3">
+                    <h3 class="title">Tasks</h3>
+                </div>
+                <div class="col-9" id="row2col2">
+                <table id="tasksTable">
+                    <thead>
+                        <tr><th>ID</th><th>Job ID</th><th>Staged At</th><th>Scheduled For</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            <div class="row" id="row3">
+                <div class="col-2">
+                <h3 class="title">Executions</h3>
+                </div>
+                <div class="col-9" id="row3col2">
                     <table id="executionsTable">
                         <thead>
                             <tr><th>ID</th><th>Task ID</th><th>Owner</th><th>Started At</th><th>Finished At</th><th>Status</th><th>STDOUT</th><th>STDERR</th></tr>
@@ -57,11 +110,9 @@
                         </tbody>
                     </table>
                 </div>
-
-
             </div>
-        </div>
 
+        </div>
         <script>
 
          function loadJobs() {
@@ -98,7 +149,7 @@
                      .style("background-color", "azure")
                      .on('click', d => {
                          d3.select("#tasksTable").selectAll("tr").style("background-color", "azure");
-                         d3.select(d3.event.target.parentElement).style("background-color", "honeydew");
+                         d3.select(d3.event.target.parentElement).style("background-color", "lightyellow");
                          loadExecutions(d.id);
                      })
                      .selectAll("td")
@@ -119,7 +170,7 @@
                      .data(data)
                      .enter()
                      .append('tr')
-                     .style("background-color", "honeydew")
+                     .style("background-color", "lightyellow")
                      .selectAll("td")
                      .data(function(d) { return Object.values(d); })
                      .enter()
@@ -131,7 +182,7 @@
          function createJob() {
              fetch("http://localhost:7080/jobs",
                    { method: 'POST'
-                   , body: '{ "title":"healthcheck", "code": "curl https://example.com/", "frequency": "10 min"}'
+                   , body: '{ "title":"healthcheck", "code": "curl --show-error --fail https://example.com", "frequency": "30 seconds"}'
                    , headers: {"content-type": "application/json"}
                    }
              );
