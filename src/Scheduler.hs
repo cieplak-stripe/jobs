@@ -100,10 +100,12 @@ execute task = do
       let stdin = ""
       putStrLn ("running " <> "path")
       (exitCode, stdout, stderr) <- readProcessWithExitCode path args stdin
+
       let executionStatus =
             case exitCode of
-              _ -> SUCCEEDED
-              -- _ -> FAILED
+              ExitSuccess -> SUCCEEDED
+              _           -> FAILED
+
       let finishForm = object
                        [ "execution_id" .= (execution &. #id)
                        , "state"        .= executionStatus
