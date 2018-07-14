@@ -11,6 +11,7 @@ CREATE TYPE task_state
   , 'READY'
   , 'RUNNING'
   , 'COMPLETE'
+  , 'INCOMPLETE'
   );
 -- -----------------------------------------------------------------------------
 CREATE TYPE execution_state

@@ -15,7 +15,6 @@ LANGUAGE
 --------------------------------------------------------------------------------
 module Types where
 --------------------------------------------------------------------------------
-import Control.Lens
 import Data.Aeson
 import GHC.Generics
 import Prelude ()
@@ -37,13 +36,6 @@ type Task =
    , "scheduled_for" := Text
    , "state"         := TaskState
    ]
-
-data TaskState
-  = STAGED
-  | READY
-  | RUNNING
-  | COMPLETE
-  deriving (Show, Eq, Generic, FromJSON, ToJSON)
 --------------------------------------------------------------------------------
 type Execution =
   '[ "id"          := Int
@@ -54,16 +46,18 @@ type Execution =
    , "stdout"      := Maybe Text
    , "stderr"      := Maybe Text
    ]
-
+--------------------------------------------------------------------------------
+data TaskState
+  = STAGED
+  | READY
+  | RUNNING
+  | COMPLETE
+  | INCOMPLETE
+  deriving (Show, Eq, Generic, FromJSON, ToJSON)
+--------------------------------------------------------------------------------
 data ExecutionState
   = STARTED
   | SUCCEEDED
   | FAILED
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
---------------------------------------------------------------------------------
-type Alert =
-  '[ "id"           := Int
-   , "execution_id" := Int
-   , "message"      := Value
-   ]
 --------------------------------------------------------------------------------

@@ -61,12 +61,11 @@ BEGIN
   VALUES (task, 'localhost')
   RETURNING *;
 
-
 END;
 
 $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION finish_task_execution (
+CREATE OR REPLACE FUNCTION commit_task_execution (
   execution_id INT,
   state        execution_state,
   stdout       TEXT,
@@ -90,7 +89,7 @@ BEGIN
   IF state = 'SUCCEEDED' THEN
     UPDATE tasks SET state = 'COMPLETE' where id = task_id_;
   ELSE
-    UPDATE tasks SET state = 'READY'     where id = task_id_;
+    UPDATE tasks SET state = 'INCOMPLETE' where id = task_id_;
   END IF;
 END;
 

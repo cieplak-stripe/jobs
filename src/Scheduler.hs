@@ -16,7 +16,6 @@ LANGUAGE
 module Scheduler where
 --------------------------------------------------------------------------------
 import           Control.Concurrent (threadDelay)
-import           Control.Lens hiding ((.=))
 import           Control.Monad
 import           Control.Exception
 import           Data.Aeson
@@ -112,6 +111,6 @@ execute task = do
                        , "stderr"       .= (stderr)
                        ]
       putStrLn (encode finishForm)
-      DB.post "/rpc/finish_task_execution" finishForm :: IO Value
+      DB.post "/rpc/commit_task_execution" finishForm :: IO Value
       return ()
 --------------------------------------------------------------------------------
