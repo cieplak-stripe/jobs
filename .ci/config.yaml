@@ -1,0 +1,28 @@
+---
+
+steps:
+
+  - pkg install -y curl
+  - curl -L https://raw.githubusercontent.com/cieplak/jz/master/jz.sh > /usr/local/bin/jz
+
+  - jz jail setup
+  - jz jail create postgres
+  - jz jail create postgREST
+  - jz jail create jobs
+
+  - cp .ci/postgres/setup.sh   /mnt/jails/postgres/.
+  - cp ./ci/postgREST/setup.sh /mnt/jails/postgREST/.
+  - cp -a /project/*           /mnt/jails/jobs/home/jobs/.
+  - cp ./ci/jobs/setup.sh      /mnt/jails/jobs/.
+  - cp ./ci/jobs/tests.sh      /mnt/jails/jobs/.
+
+  - echo `jls -j postgres ip4.addr`
+
+  - jexec postgres  ./setup.sh
+  - jexec postgREST ./setup.sh
+  - jexec jobs      ./setup.sh
+
+  - service jail start postgres
+  - service jail start postgREST
+
+  - jexec jobs      ./tests.sh
