@@ -1,11 +1,17 @@
-{-# LANGUAGE OverloadedStrings      #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE TemplateHaskell        #-}
-{-# LANGUAGE DuplicateRecordFields  #-}
-{-# LANGUAGE DeriveGeneric          #-}
-{-# LANGUAGE DeriveAnyClass         #-}
-{-# LANGUAGE FlexibleInstances      #-}
+{-#
+LANGUAGE
+  DataKinds,
+  DeriveAnyClass,
+  DeriveGeneric,
+  ConstraintKinds,
+  ExtendedDefaultRules,
+  FlexibleContexts,
+  FlexibleInstances,
+  TypeFamilies,
+  TypeOperators,
+  OverloadedStrings,
+  OverloadedLabels
+#-}
 --------------------------------------------------------------------------------
 module Types where
 --------------------------------------------------------------------------------
@@ -14,26 +20,23 @@ import Data.Aeson
 import GHC.Generics
 import Prelude ()
 import Protolude
+import SuperRecord hiding ((&), get)
 --------------------------------------------------------------------------------
--- |
-data Job
-  = Job
-  { __id         :: Int
-  , __title      :: Text
-  , __code       :: Text
-  , __start_time :: Text
-  , __frequency  :: Text
-  } deriving (Show, Eq, Generic)
+type Job =
+  '[ "id"         := Int
+   , "title"      := Text
+   , "code"       := Text
+   , "start_time" := Text
+   , "frequency"  := Text
+   ]
 --------------------------------------------------------------------------------
--- |
-data Task
-  = Task
-  { __id            :: Int
-  , __job_id        :: Int
-  , __staged_at     :: Text
-  , __scheduled_for :: Text
-  , __state         :: TaskState
-  } deriving (Show, Eq, Generic)
+type Task =
+  '[ "id"            := Int
+   , "job_id"        := Int
+   , "staged_at"     := Text
+   , "scheduled_for" := Text
+   , "state"         := TaskState
+   ]
 
 data TaskState
   = STAGED
@@ -42,17 +45,15 @@ data TaskState
   | COMPLETE
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 --------------------------------------------------------------------------------
--- |
-data Execution
-  = Execution
-  { __id          :: Int
-  , __task_id     :: Int
-  , __started_at  :: Text
-  , __finished_at :: Maybe Text
-  , __state       :: ExecutionState
-  , __stdout      :: Maybe Text
-  , __stderr      :: Maybe Text
-  } deriving (Show, Eq, Generic)
+type Execution =
+  '[ "id"          := Int
+   , "task_id"     := Int
+   , "started_at"  := Text
+   , "finished_at" := Maybe Text
+   , "state"       := ExecutionState
+   , "stdout"      := Maybe Text
+   , "stderr"      := Maybe Text
+   ]
 
 data ExecutionState
   = STARTED
@@ -60,31 +61,9 @@ data ExecutionState
   | FAILED
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 --------------------------------------------------------------------------------
--- |
-data Alert
-  = Alert
-  { __id           :: Int
-  , __execution_id :: Int
-  , __message      :: Value
-  } deriving (Show, Eq, Generic)
---------------------------------------------------------------------------------
---                                                                        Lenses
-makeFieldsNoPrefix ''Job
-makeFieldsNoPrefix ''Task
-makeFieldsNoPrefix ''Execution
-makeFieldsNoPrefix ''Alert
---------------------------------------------------------------------------------
---                                                                JSON Instances
-
-instance ToJSON   Job       where toJSON    = genericToJSON    defaultOptions {fieldLabelModifier = drop 2}
-instance FromJSON Job       where parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = drop 2}
-
-instance ToJSON   Task      where toJSON    = genericToJSON    defaultOptions {fieldLabelModifier = drop 2}
-instance FromJSON Task      where parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = drop 2}
-
-instance ToJSON   Execution where toJSON    = genericToJSON    defaultOptions {fieldLabelModifier = drop 2}
-instance FromJSON Execution where parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = drop 2}
-
-instance ToJSON   Alert     where toJSON    = genericToJSON    defaultOptions {fieldLabelModifier = drop 2}
-instance FromJSON Alert     where parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = drop 2}
+type Alert =
+  '[ "id"           := Int
+   , "execution_id" := Int
+   , "message"      := Value
+   ]
 --------------------------------------------------------------------------------

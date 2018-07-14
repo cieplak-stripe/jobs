@@ -1,6 +1,17 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-#
+LANGUAGE
+  DataKinds,
+  DeriveAnyClass,
+  DeriveGeneric,
+  ConstraintKinds,
+  ExtendedDefaultRules,
+  FlexibleContexts,
+  FlexibleInstances,
+  TypeFamilies,
+  TypeOperators,
+  OverloadedStrings,
+  OverloadedLabels
+#-}
 --------------------------------------------------------------------------------
 import Test.DocTest
 import Test.Hspec
@@ -12,6 +23,7 @@ import Control.Lens hiding ((.=))
 import Data.Aeson
 import Prelude   hiding (head)
 import Protolude hiding (putStrLn)
+import SuperRecord
 --------------------------------------------------------------------------------
 import Database
 import Scheduler
@@ -21,8 +33,7 @@ default (Text)
 --------------------------------------------------------------------------------
 main :: IO ()
 main = do
-  -- putStrLn "\nRunning Doc Tests!"
-  -- doctest ["src/", "-XOverloadedStrings"]
+  doctest ["src/", "-XOverloadedStrings"]
   hspec spec
   return ()
 --------------------------------------------------------------------------------
@@ -32,13 +43,11 @@ spec = do
    it "registers a job" $ do
      let jobForm = object [ "title"      .= "List Files"
                           , "code"       .= "ls"
-                          , "start_time" .= "2018-05-29"
-                          , "frequency"  .= "1 hour"
+                          , "frequency"  .= "1 minute"
                           ]
-     jobs <- Database.post "/jobs" jobForm :: IO [Job]
+     jobs <- Database.post "/jobs" jobForm :: IO [Rec Job]
      let Just job = head jobs
-     job ^. _title      `shouldBe` "List Files"
-     job ^. _code       `shouldBe` "ls"
-     job ^. _start_time `shouldBe` "2018-05-29T00:00:00"
-     job ^. _frequency  `shouldBe` "01:00:00"
+     job &. #title      `shouldBe` "List Files"
+     job &. #code       `shouldBe` "ls"
+     job &. #frequency  `shouldBe` "00:01:00"
 --------------------------------------------------------------------------------

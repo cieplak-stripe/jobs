@@ -1,5 +1,17 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-#
+LANGUAGE
+  DataKinds,
+  DeriveAnyClass,
+  DeriveGeneric,
+  ConstraintKinds,
+  ExtendedDefaultRules,
+  FlexibleContexts,
+  FlexibleInstances,
+  TypeFamilies,
+  TypeOperators,
+  OverloadedStrings,
+  OverloadedLabels
+#-}
 --------------------------------------------------------------------------------
 module Scheduler where
 --------------------------------------------------------------------------------
@@ -12,6 +24,7 @@ import           Data.Text (unpack)
 import           Prelude ()
 import           Protolude
 import qualified System.Directory as Dir
+import           SuperRecord
 import           System.Posix.Files (accessModes, setFileMode)
 import           System.Process (readProcessWithExitCode)
 --------------------------------------------------------------------------------
@@ -43,14 +56,14 @@ catchAny = Control.Exception.catch
 syncJobs :: IO ()
 syncJobs = do
   try (Dir.createDirectory "scripts") :: IO (Either (IOException) ())
-  jobs <- DB.get "/jobs" :: IO [Job]
+  jobs <- DB.get "/jobs" :: IO [Rec Job]
   mapM_ syncJob jobs
   return ()
 
-syncJob :: Job -> IO ()
+syncJob :: Rec Job -> IO ()
 syncJob job = do
-  let filepath = scriptPath (show (job ^. _id))
-  let content  = job ^. _code
+  let filepath = scriptPath (show (job &. #id))
+  let content  = job &. #code
   writeFile filepath content
   setFileMode filepath accessModes -- "chmod a+rwx"
   return ()
@@ -68,22 +81,22 @@ updateReadyTasks = do
   DB.post "/rpc/update_ready_tasks" (object []) :: IO Value
   return ()
 --------------------------------------------------------------------------------
-getReadyTasks :: IO [Task]
+getReadyTasks :: IO [Rec Task]
 getReadyTasks = do
-  tasks <- DB.get "/tasks?state=eq.READY" :: IO [Task]
+  tasks <- DB.get "/tasks?state=eq.READY" :: IO [Rec Task]
   return tasks
 --------------------------------------------------------------------------------
-execute :: Task -> IO ()
+execute :: Rec Task -> IO ()
 execute task = do
-  let startForm = object ["task" .= (task ^. _id)]
-  executions <- DB.post "/rpc/checkout_task" startForm :: IO [Execution]
+  let startForm = object ["task" .= (task &. #id)]
+  executions <- DB.post "/rpc/checkout_task" startForm :: IO [Rec Execution]
   let maybeExecution = head executions
   case maybeExecution of
     Nothing -> do
       putStrLn (show executions :: Text)
       return ()
     Just execution -> do
-      let path  = scriptPath (show (task ^. _job_id))
+      let path  = scriptPath (show (task &. #job_id))
       let args  = []
       let stdin = ""
       putStrLn ("running " <> "path")
@@ -93,7 +106,7 @@ execute task = do
               _ -> SUCCEEDED
               -- _ -> FAILED
       let finishForm = object
-                       [ "execution_id" .= (execution ^. _id)
+                       [ "execution_id" .= (execution &. #id)
                        , "state"        .= executionStatus
                        , "stdout"       .= (stdout)
                        , "stderr"       .= (stderr)

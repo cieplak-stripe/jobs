@@ -24,6 +24,7 @@ dependencies:
 - unix
 - process
 - directory
+- superrecord
 
 library:
   source-dirs: src
