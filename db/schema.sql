@@ -23,10 +23,10 @@ CREATE TYPE execution_state
 -- -----------------------------------------------------------------------------
 CREATE TABLE jobs
   ( id         SERIAL    PRIMARY KEY
-  , title      TEXT      NOT NULL
+  , title      TEXT      NOT NULL DEFAULT ''
   , code       TEXT      NOT NULL
   , start_time TIMESTAMP NOT NULL DEFAULT now()
-  , frequency  INTERVAL  NOT NULL
+  , frequency  INTERVAL CONSTRAINT second_granularity CHECK (frequency >= '1 sec')
   );
 -- -----------------------------------------------------------------------------
 CREATE TABLE tasks

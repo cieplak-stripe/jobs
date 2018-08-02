@@ -72,7 +72,8 @@ scriptPath number = unpack ("scripts" <> "/" <> "job" <> "." <> number)
 --------------------------------------------------------------------------------
 scheduleTasks :: IO ()
 scheduleTasks = do
-  DB.post "/rpc/schedule_tasks" (object []) :: IO Value
+  DB.post "/rpc/schedule_one_off_tasks"   (object []) :: IO Value
+  DB.post "/rpc/schedule_recurring_tasks" (object []) :: IO Value
   return ()
 --------------------------------------------------------------------------------
 updateReadyTasks :: IO ()

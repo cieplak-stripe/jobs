@@ -26,7 +26,7 @@ type Job =
    , "title"      := Text
    , "code"       := Text
    , "start_time" := Text
-   , "frequency"  := Text
+   , "frequency"  := Maybe Text
    ]
 --------------------------------------------------------------------------------
 type Task =

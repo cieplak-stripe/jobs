@@ -1,7 +1,27 @@
 -- -----------------------------------------------------------------------------
 \connect jobs
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION schedule_tasks () RETURNS BIGINT AS $$
+CREATE OR REPLACE FUNCTION schedule_one_off_tasks () RETURNS BIGINT AS $$
+
+WITH
+  scheduled_tasks AS (
+    SELECT
+      id         AS job_id,
+      start_time AS scheduled_for
+     FROM jobs
+     WHERE frequency IS NULL
+   ),
+  count_tasks_created AS (
+    INSERT INTO tasks (job_id, scheduled_for)
+    SELECT job_id, scheduled_for FROM scheduled_tasks
+    ON CONFLICT DO NOTHING
+    RETURNING 1
+  )
+SELECT count(*) from count_tasks_created
+
+$$ LANGUAGE 'sql';
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION schedule_recurring_tasks () RETURNS BIGINT AS $$
 
 WITH
   scheduled_tasks AS (
@@ -13,6 +33,7 @@ WITH
         frequency
       ) AS scheduled_for
      FROM jobs
+     WHERE frequency IS NOT NULL
    ),
   count_tasks_created AS (
     INSERT INTO tasks (job_id, scheduled_for)
