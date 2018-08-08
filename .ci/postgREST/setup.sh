@@ -4,7 +4,7 @@ PGRST_PKG="https://github.com/PostgREST/postgrest/releases/download/v0.5.0.0/pos
 
 #  Install postgREST executable
 
-pkg install -y curl
+pkg install -y curl postgresql10-client libiconv gmp
 curl -L $PGRST_PKG > /tmp/postgrest.tgz
 tar xf /tmp/postgrest.tgz -C /usr/local/bin/
 
