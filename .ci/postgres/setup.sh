@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DATA_DIR="/var/lib/postgresql/data10"
+DATA_DIR="/var/db/postgres/data10"
 
 pkg install -y postgresql10-server postgresql10-contrib
 
